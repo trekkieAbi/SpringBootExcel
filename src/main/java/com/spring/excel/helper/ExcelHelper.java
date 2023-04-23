@@ -8,6 +8,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -17,7 +19,7 @@ import java.util.List;
 public class ExcelHelper {
     public static String TYPE="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     static String[] headers={"Id","Title","Description","Published"};
-    static String SHEET="Tutorials";
+    static String SHEET="tutorials";
 
     public static boolean hasExcelFormat(MultipartFile file){
         if(!TYPE.equals(file.getContentType())){
@@ -43,7 +45,6 @@ public class ExcelHelper {
                 }
                 Iterator<Cell> cellsInRow = currentRow.iterator();
                 Tutorial tutorial = new Tutorial();
-                int cellIdx = 0;
                 while (cellsInRow.hasNext()) {
                     Cell currentCell = cellsInRow.next();
                     switch (currentCell.getColumnIndex()) {
@@ -66,13 +67,49 @@ public class ExcelHelper {
 
                 }
                 tutorials.add(tutorial);
+            }
+
                 workbook.close();
 
                 return tutorials;
-            }
+            
         } catch (IOException e) {
             throw new RuntimeException("fail to parse Excel file: " + e.getMessage());
+            
         }
-        return null;
+        
     }
+    
+    public static ByteArrayInputStream tutorialToExcel(List<Tutorial> tutorials) throws Exception {
+    	ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+    	Workbook workbook=new XSSFWorkbook();
+    	try {
+    		Sheet sheet=workbook.createSheet(SHEET);
+    		Row row=sheet.createRow(0);
+    		
+    		for( int i=0;i<headers.length;i++) {
+    			Cell cell=row.createCell(i);
+    			cell.setCellValue(headers[i]);
+    			
+    		}
+    		
+    		int rowIndex=1;
+    		for(Tutorial eachTutorial:tutorials) {
+    			Row dataRow=sheet.createRow(rowIndex);
+    			dataRow.createCell(0).setCellValue(eachTutorial.getId());
+    			dataRow.createCell(1).setCellValue(eachTutorial.getTitle());
+    			dataRow.createCell(2).setCellValue(eachTutorial.getDescription());
+    			dataRow.createCell(3).setCellValue(eachTutorial.isPublished());
+    		}
+    		workbook.write(outputStream);
+    		return new ByteArrayInputStream(outputStream.toByteArray());
+    		
+    	}catch (Exception e) {
+    		throw new Exception("Unable to write data to excel file");
+		}
+    	finally {
+			workbook.close();
+			outputStream.close();
+		}
+    	}
 }

@@ -5,17 +5,24 @@ import com.spring.excel.message.ResponseMessage;
 import com.spring.excel.model.Tutorial;
 import com.spring.excel.service.ExcelService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
+
+import javax.annotation.Resource;
 
 @CrossOrigin("http://localhost:8081")
 @Controller
-@RequestMapping("/api/excel")
+@RequestMapping("/api")
 public class ExcelController {
     @Autowired
     ExcelService excelService;
@@ -50,6 +57,20 @@ public ResponseEntity<List<Tutorial>> getAllTutorials(){
             return new ResponseEntity<>(null,HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+@RequestMapping(value = "/excel",method = RequestMethod.GET)
+public ResponseEntity<InputStreamResource> download() throws Exception{
+	String name="abishek.xslx";
+	
+	ByteArrayInputStream arrayInputStream=excelService.dataToExcel();
+	InputStreamResource file=new InputStreamResource(arrayInputStream);
+	
+return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"attachment;fileName="+name)
+		.contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+		.body(file);
+
+	
+	
+}
 
 
 }
